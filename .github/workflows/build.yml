@@ -1,4 +1,4 @@
-name: CI
+name: Build Android APK
 
 on:
   push:
@@ -11,26 +11,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
+        cache: 'pip'
 
-    - name: Install dependencies
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          git \
+          ffmpeg \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev \
+          libportmidi-dev \
+          libswscale-dev \
+          libavformat-dev \
+          libavcodec-dev \
+          zlib1g-dev \
+          libffi-dev \
+          libssl-dev \
+          autoconf \
+          libtool \
+          pkg-config \
+          unzip \
+          ant \
+          openjdk-17-jdk
+
+    - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install buildozer cython
-
-    - name: Accept Android Licenses
-      run: |
-        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-        yes | sdkmanager --licenses || true
+        pip install --upgrade buildozer cython==0.29.36
 
     - name: Build with Buildozer
-      env:
-        ACCEPT_SDK_LICENSES: 1
       run: |
         buildozer -v android debug
 
